@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediFlow — Clinic Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#060d1a; --surface:#0d1829; --surface2:#111f35; --surface3:#162440;
+  --border:rgba(99,179,237,0.12); --border2:rgba(99,179,237,0.2);
+  --accent:#38bdf8; --accent2:#06b6d4; --accent3:#24b07d;
+  --warn:#f59e0b; --danger:#f87171; --purple:#a78bfa;
+  --text:#e2f0ff; --muted:#6b8aad; --muted2:#4a6785;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 80% 60% at 10% 0%,rgba(56,189,248,0.07) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 50% at 90% 100%,rgba(52,211,153,0.05) 0%,transparent 60%);
+  pointer-events:none;}
+
+/* AUTH */
+#auth-screen{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+.auth-wrap{display:flex;flex-direction:column;align-items:center;}
+.auth-logo{margin-bottom:28px;text-align:center;}
+.auth-logo .logo-icon{width:58px;height:58px;border-radius:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 10px;}
+.auth-logo h1{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;letter-spacing:-0.5px;}
+.auth-logo p{color:var(--muted);font-size:13px;margin-top:2px;}
+.auth-box{width:440px;padding:36px;background:var(--surface);border:1px solid var(--border);border-radius:22px;position:relative;overflow:hidden;animation:slideUp 0.5s ease;}
+.auth-box::after{content:'';position:absolute;top:-80px;right:-80px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(56,189,248,0.1),transparent 70%);pointer-events:none;}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.role-tabs{display:flex;gap:6px;margin-bottom:26px;background:var(--bg);border-radius:12px;padding:4px;}
+.role-tab{flex:1;padding:10px;border-radius:9px;border:none;cursor:pointer;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.role-tab.active{background:var(--surface2);color:var(--text);box-shadow:0 2px 12px rgba(0,0,0,0.4);}
+.fg{margin-bottom:16px;}
+.fg label{display:block;font-size:11px;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:1px;font-weight:500;}
+.fg input{width:100%;padding:12px 15px;background:var(--bg);border:1px solid var(--border);border-radius:11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s;}
+.fg input:focus{border-color:var(--accent);}
+.auth-btns{display:flex;gap:10px;}
+.btn-ap{flex:1;padding:13px;border-radius:11px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#060d1a;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;transition:all 0.2s;}
+.btn-ap:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(56,189,248,0.3);}
+.btn-as{flex:1;padding:13px;border-radius:11px;border:1px solid var(--border2);cursor:pointer;background:transparent;color:var(--accent);font-family:'Syne',sans-serif;font-weight:700;font-size:14px;transition:all 0.2s;}
+.btn-as:hover{background:rgba(56,189,248,0.05);}
+.auth-err{color:var(--danger);font-size:12px;margin-top:11px;text-align:center;display:none;padding:9px;background:rgba(248,113,113,0.07);border-radius:8px;border:1px solid rgba(248,113,113,0.18);}
+
+/* LAYOUT */
+#app{display:none;min-height:100vh;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:252px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:50;}
+.sb-brand{padding:20px 18px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:11px;}
+.sb-logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.sb-brand h2{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;}
+.sb-rbadge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(56,189,248,0.1);color:var(--accent);border:1px solid rgba(56,189,248,0.2);margin-top:3px;}
+.nav{flex:1;padding:10px 9px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
+.nav-sec{font-size:9.5px;color:var(--muted2);text-transform:uppercase;letter-spacing:1.2px;padding:10px 9px 5px;font-weight:600;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:10px;cursor:pointer;color:var(--muted);font-size:13.5px;font-weight:500;transition:all 0.15s;border:none;background:transparent;width:100%;text-align:left;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:rgba(56,189,248,0.1);color:var(--accent);}
+.nav-item .ni{font-size:16px;width:20px;text-align:center;flex-shrink:0;}
+.sb-footer{padding:12px 14px;border-top:1px solid var(--border);}
+.user-row{display:flex;align-items:center;gap:9px;}
+.u-av{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#060d1a;flex-shrink:0;}
+.u-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;}
+.u-email{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;}
+.lo-btn{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;transition:color 0.2s;flex-shrink:0;padding:4px;}
+.lo-btn:hover{color:var(--danger);}
+.main{margin-left:252px;min-height:100vh;padding:26px 30px;position:relative;z-index:1;}
+.page{display:none;animation:fadeIn 0.22s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* PAGE HEADER */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:14px;flex-wrap:wrap;}
+.ph-l h2{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;letter-spacing:-0.5px;}
+.ph-l p{color:var(--muted);font-size:13px;margin-top:3px;}
+.ph-r{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+
+/* STATS */
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 18px;position:relative;overflow:hidden;transition:transform 0.2s,border-color 0.2s;}
+.sc:hover{transform:translateY(-2px);border-color:var(--border2);}
+.sc::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--al,linear-gradient(90deg,var(--accent),var(--accent2)));}
+.sc-icon{font-size:22px;margin-bottom:9px;}
+.sc-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1;}
+.sc-lbl{color:var(--muted);font-size:11.5px;margin-top:4px;}
+.sc-sub{font-size:10.5px;color:var(--accent3);margin-top:3px;}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:18px;}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px;}
+
+/* BUTTONS */
+.btn{padding:9px 18px;border-radius:10px;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;transition:all 0.18s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#060d1a;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 5px 15px rgba(56,189,248,0.28);}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-danger{background:rgba(248,113,113,0.09);color:var(--danger);border:1px solid rgba(248,113,113,0.2);}
+.btn-danger:hover{background:rgba(248,113,113,0.18);}
+.btn-success{background:rgba(52,211,153,0.09);color:var(--accent3);border:1px solid rgba(52,211,153,0.2);}
+.btn-success:hover{background:rgba(52,211,153,0.18);}
+.btn-warn{background:rgba(245,158,11,0.09);color:var(--warn);border:1px solid rgba(245,158,11,0.2);}
+.btn-warn:hover{background:rgba(245,158,11,0.18);}
+.btn-purple{background:rgba(167,139,250,0.09);color:var(--purple);border:1px solid rgba(167,139,250,0.2);}
+.btn-purple:hover{background:rgba(167,139,250,0.18);}
+.btn-sm{padding:7px 13px;font-size:12px;}
+.btn-xs{padding:5px 10px;font-size:11px;border-radius:8px;}
+
+/* FORMS */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.fgrid .full{grid-column:1/-1;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.9px;font-weight:500;}
+.field input,.field select,.field textarea{padding:11px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;transition:border-color 0.2s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);}
+.field select option{background:var(--surface2);}
+.field textarea{resize:vertical;min-height:80px;}
+
+/* TABLE */
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead th{text-align:left;padding:10px 13px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.9px;border-bottom:1px solid var(--border);font-weight:600;white-space:nowrap;}
+tbody tr{border-bottom:1px solid rgba(99,179,237,0.05);transition:background 0.1s;}
+tbody tr:hover{background:var(--surface2);}
+tbody td{padding:12px 13px;font-size:13px;vertical-align:middle;}
+.tda{display:flex;gap:5px;flex-wrap:wrap;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:600;}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.badge-blue{background:rgba(56,189,248,0.1);color:var(--accent);}
+.badge-green{background:rgba(52,211,153,0.1);color:var(--accent3);}
+.badge-warn{background:rgba(245,158,11,0.1);color:var(--warn);}
+.badge-red{background:rgba(248,113,113,0.1);color:var(--danger);}
+.badge-purple{background:rgba(167,139,250,0.1);color:var(--purple);}
+.badge-token{background:rgba(56,189,248,0.07);color:var(--accent);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;padding:3px 9px;border-radius:7px;border:1px solid rgba(56,189,248,0.15);}
+.badge-token::before{display:none;}
+
+/* MODAL */
+.mo{position:fixed;inset:0;z-index:200;background:rgba(6,13,26,0.88);display:none;align-items:center;justify-content:center;padding:20px;}
+.mo.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;width:580px;max-width:100%;max-height:88vh;overflow-y:auto;animation:slideUp 0.22s ease;}
+.modal-lg{width:720px;}
+.modal-xl{width:880px;}
+.mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+.mt{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
+.mc{background:none;border:none;cursor:pointer;color:var(--muted);font-size:19px;padding:3px;border-radius:7px;transition:color 0.15s;}
+.mc:hover{color:var(--danger);}
+.ma{display:flex;gap:9px;margin-top:22px;justify-content:flex-end;}
+
+/* NOTIFICATION */
+.notif{position:fixed;top:18px;right:18px;z-index:500;padding:12px 17px;border-radius:12px;font-size:13px;font-weight:500;background:var(--surface);border:1px solid var(--border);box-shadow:0 8px 28px rgba(0,0,0,0.5);transform:translateX(130%);transition:transform 0.3s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:8px;max-width:300px;}
+.notif.show{transform:translateX(0);}
+.notif.success{border-color:rgba(52,211,153,0.35);color:var(--accent3);}
+.notif.error{border-color:rgba(248,113,113,0.35);color:var(--danger);}
+.notif.info{border-color:rgba(56,189,248,0.25);color:var(--accent);}
+
+/* MISC */
+.sep{height:1px;background:var(--border);margin:16px 0;}
+.loader{text-align:center;padding:32px;color:var(--muted);font-size:13px;}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.6s linear infinite;margin-right:6px;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:44px 20px;color:var(--muted);}
+.empty .ei{font-size:36px;margin-bottom:10px;}
+.empty p{font-size:13px;}
+.sbar{padding:11px 15px;background:var(--surface2);border:1px solid var(--border);border-radius:11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;transition:border-color 0.2s;width:100%;}
+.sbar:focus{border-color:var(--accent);}
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.ii label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.9px;font-weight:500;display:block;margin-bottom:3px;}
+.ii .val{font-size:13.5px;font-weight:500;}
+.rx-card{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:13px;margin-bottom:9px;}
+.slbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:9px;}
+.conf-box{background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.18);border-radius:11px;padding:14px;margin-bottom:14px;font-size:13.5px;}
+
+/* QUEUE */
+.qc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px;display:flex;align-items:center;gap:16px;transition:border-color 0.2s;}
+.qc:hover{border-color:var(--border2);}
+.qt-box{text-align:center;min-width:68px;background:var(--surface2);border-radius:10px;padding:9px 7px;}
+.qt-num{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;color:var(--accent);line-height:1;}
+.qt-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-top:2px;}
+.qi{flex:1;}
+.qname{font-weight:600;font-size:14px;margin-bottom:2px;}
+.qmeta{font-size:11.5px;color:var(--muted);}
+.qcomp{font-size:13px;margin-top:5px;}
+.qact{display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
+
+/* STATUS FLOW */
+.sf{display:flex;margin-bottom:20px;border-radius:11px;overflow:hidden;border:1px solid var(--border);}
+.sf-step{flex:1;padding:10px 14px;background:var(--surface2);font-size:11.5px;font-weight:600;text-align:center;color:var(--muted);border-right:1px solid var(--border);}
+.sf-step:last-child{border-right:none;}
+.sf-step.s-done{background:rgba(52,211,153,0.08);color:var(--accent3);}
+.sf-step.s-active{background:rgba(56,189,248,0.08);color:var(--accent);}
+</style>
+</head>
+<body>
+
+<div class="notif" id="notif"></div>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-wrap">
+    <div class="auth-logo">
+      <div class="logo-icon">🏥</div>
+      <h1>MediFlow</h1>
+      <p>Clinic Management System</p>
+    </div>
+    <div class="auth-box">
+      <div class="role-tabs">
+        <button class="role-tab active" onclick="setRole('doctor')">🩺 Doctor</button>
+        <button class="role-tab" onclick="setRole('receptionist')">👩‍💼 Receptionist</button>
+      </div>
+      <div class="fg"><label>Email</label><input type="email" id="ae" placeholder="user@clinic.com"></div>
+      <div class="fg"><label>Password</label><input type="password" id="ap" placeholder="••••••••" onkeydown="if(event.key==='Enter')signIn()"></div>
+      <div class="auth-btns">
+        <button class="btn-ap" onclick="signIn()">Sign In</button>
+        <button class="btn-as" onclick="signUp()">Register</button>
+      </div>
+      <div class="auth-err" id="aerr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- Patient Create/Edit -->
+<div class="mo" id="m-patient">
+  <div class="modal">
+    <div class="mh"><div class="mt" id="m-patient-title">Register Patient</div><button class="mc" onclick="closeModal('m-patient')">✕</button></div>
+    <div class="fgrid">
+      <div class="field"><label>Full Name *</label><input id="pn" placeholder="John Doe"></div>
+      <div class="field"><label>Age *</label><input id="pa" type="number" placeholder="25" min="0" max="150"></div>
+      <div class="field"><label>Gender</label><select id="pg"><option>Male</option><option>Female</option><option>Other</option></select></div>
+      <div class="field"><label>Blood Group</label><select id="pb"><option value="">Unknown</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
+      <div class="field"><label>Phone</label><input id="pp" placeholder="+91 9999999999"></div>
+      <div class="field"><label>Email</label><input id="pe" type="email" placeholder="patient@email.com"></div>
+      <div class="field full"><label>Address</label><input id="pad" placeholder="Door No, Street, City, State"></div>
+      <div class="field full"><label>Chief Complaint *</label><textarea id="pc" placeholder="Symptoms or reason for visit..."></textarea></div>
+      <div class="field full"><label>Medical History / Allergies</label><textarea id="pmh" placeholder="Known allergies, chronic conditions..." style="min-height:65px;"></textarea></div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-ghost" onclick="closeModal('m-patient')">Cancel</button>
+      <button class="btn btn-primary" id="btn-sp" onclick="savePatient()">🎫 Register & Token</button>
+    </div>
+  </div>
+</div>
+
+<!-- View Full Record -->
+<div class="mo" id="m-view">
+  <div class="modal modal-xl">
+    <div class="mh"><div class="mt">Patient Full Record</div><button class="mc" onclick="closeModal('m-view')">✕</button></div>
+    <div id="view-content"></div>
+  </div>
+</div>
+
+<!-- Prescription Write/Edit -->
+<div class="mo" id="m-rx">
+  <div class="modal modal-lg">
+    <div class="mh"><div class="mt" id="m-rx-title">Write Prescription</div><button class="mc" onclick="closeModal('m-rx')">✕</button></div>
+    <div id="rx-pinfo" style="background:var(--surface2);border-radius:10px;padding:13px;margin-bottom:16px;"></div>
+    <div class="fgrid">
+      <div class="field full"><label>Diagnosis *</label><input id="rxd" placeholder="e.g. Acute Pharyngitis"></div>
+      <div class="field full"><label>Medications & Dosage *</label><textarea id="rxm" placeholder="Tab. Amoxicillin 500mg — 1-0-1 × 5 days&#10;Tab. Paracetamol 500mg — 1-1-1 PRN"></textarea></div>
+      <div class="field full"><label>Clinical Notes & Advice</label><textarea id="rxn" placeholder="Rest 2 days, plenty of fluids..." style="min-height:65px;"></textarea></div>
+      <div class="field"><label>Tests Ordered</label><input id="rxt" placeholder="CBC, Blood Sugar, X-Ray"></div>
+      <div class="field"><label>Follow-up Date</label><input id="rxf" type="date"></div>
+      <div class="field full"><label>Set Patient Status After</label>
+        <select id="rxst"><option value="prescribed">Prescribed</option><option value="under-treatment">Under Treatment</option><option value="completed">Completed</option></select>
+      </div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-ghost" onclick="closeModal('m-rx')">Cancel</button>
+      <button class="btn btn-primary" id="btn-srx" onclick="saveRx()">💾 Save Prescription</button>
+    </div>
+  </div>
+</div>
+
+<!-- View Rx Detail -->
+<div class="mo" id="m-rxv">
+  <div class="modal modal-lg">
+    <div class="mh"><div class="mt">Prescription Detail</div><button class="mc" onclick="closeModal('m-rxv')">✕</button></div>
+    <div id="rxv-content"></div>
+    <div class="ma" id="rxv-actions"></div>
+  </div>
+</div>
+
+<!-- Bill -->
+<div class="mo" id="m-bill">
+  <div class="modal">
+    <div class="mh"><div class="mt" id="m-bill-title">Generate Bill</div><button class="mc" onclick="closeModal('m-bill')">✕</button></div>
+    <div id="bill-pinfo" style="background:var(--surface2);border-radius:10px;padding:13px;margin-bottom:16px;"></div>
+    <div class="fgrid">
+      <div class="field"><label>Consultation Fee (₹)</label><input id="bc" type="number" value="500" min="0" oninput="calcTotal()"></div>
+      <div class="field"><label>Lab / Test Charges (₹)</label><input id="bl" type="number" value="0" min="0" oninput="calcTotal()"></div>
+      <div class="field"><label>Medicine Charges (₹)</label><input id="bm" type="number" value="0" min="0" oninput="calcTotal()"></div>
+      <div class="field"><label>Other Charges (₹)</label><input id="bo" type="number" value="0" min="0" oninput="calcTotal()"></div>
+      <div class="field"><label>Discount (₹)</label><input id="bd" type="number" value="0" min="0" oninput="calcTotal()"></div>
+      <div class="field"><label>Payment Mode</label><select id="bpay"><option>Cash</option><option>UPI</option><option>Card</option><option>Insurance</option><option>Other</option></select></div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="color:var(--muted);font-size:13px;">Total Payable</span>
+      <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--accent3)" id="btotal">₹ 500</div>
+    </div>
+    <div class="ma">
+      <button class="btn btn-ghost" onclick="closeModal('m-bill')">Cancel</button>
+      <button class="btn btn-primary" id="btn-sbill" onclick="saveBill()">🧾 Generate Bill</button>
+    </div>
+  </div>
+</div>
+
+<!-- Status Update -->
+<div class="mo" id="m-status">
+  <div class="modal" style="width:400px;">
+    <div class="mh"><div class="mt">Update Patient Status</div><button class="mc" onclick="closeModal('m-status')">✕</button></div>
+    <div id="st-pinfo" style="background:var(--surface2);border-radius:10px;padding:13px;margin-bottom:16px;"></div>
+    <div class="field" style="margin-bottom:12px;"><label>New Status</label>
+      <select id="st-sel">
+        <option value="waiting">⏳ Waiting</option>
+        <option value="in-progress">🔄 In Progress</option>
+        <option value="prescribed">✅ Prescribed</option>
+        <option value="under-treatment">💊 Under Treatment</option>
+        <option value="completed">🏁 Completed</option>
+        <option value="cancelled">❌ Cancelled</option>
+      </select>
+    </div>
+    <div class="field"><label>Remarks (optional)</label><textarea id="st-rem" placeholder="Note about this change..." style="min-height:60px;"></textarea></div>
+    <div class="ma">
+      <button class="btn btn-ghost" onclick="closeModal('m-status')">Cancel</button>
+      <button class="btn btn-primary" onclick="updateStatus()">Update Status</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete -->
+<div class="mo" id="m-confirm">
+  <div class="modal" style="width:400px;">
+    <div class="mh"><div class="mt">Confirm Delete</div><button class="mc" onclick="closeModal('m-confirm')">✕</button></div>
+    <div class="conf-box">⚠️ <span id="conf-msg">Are you sure?</span></div>
+    <div class="ma">
+      <button class="btn btn-ghost" onclick="closeModal('m-confirm')">Cancel</button>
+      <button class="btn btn-danger" id="btn-conf">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <nav class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo">🏥</div>
+      <div><h2>MediFlow</h2><div class="sb-rbadge" id="rbadge">Doctor</div></div>
+    </div>
+    <div class="nav" id="snav"></div>
+    <div class="sb-footer">
+      <div class="user-row">
+        <div class="u-av" id="uav">D</div>
+        <div><div class="u-name" id="uname">User</div><div class="u-email" id="uemail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bcc9cfd9cefcdfd0d5d2d5df92dfd3d1">[email&#160;protected]</a></div></div>
+        <button class="lo-btn" onclick="logout()" title="Logout">⏻</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main">
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="ph">
+        <div class="ph-l"><h2 id="dg">Dashboard</h2><p id="ds">Today's overview</p></div>
+        <div class="ph-r"><button class="btn btn-ghost btn-sm" onclick="loadDashboard()">🔄 Refresh</button></div>
+      </div>
+      <div class="sg">
+        <div class="sc"><div class="sc-icon">👥</div><div class="sc-val" id="s1">—</div><div class="sc-lbl">Total Patients</div></div>
+        <div class="sc" style="--al:linear-gradient(90deg,var(--accent3),#059669)"><div class="sc-icon">🎫</div><div class="sc-val" id="s2">—</div><div class="sc-lbl">Today's Tokens</div><div class="sc-sub" id="s2s"></div></div>
+        <div class="sc" style="--al:linear-gradient(90deg,var(--purple),#7c3aed)"><div class="sc-icon">📋</div><div class="sc-val" id="s3">—</div><div class="sc-lbl">Total Prescriptions</div></div>
+        <div class="sc" style="--al:linear-gradient(90deg,var(--warn),#d97706)"><div class="sc-icon">💰</div><div class="sc-val" id="s4">—</div><div class="sc-lbl">Revenue Today</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+        <div class="card"><div class="card-hdr"><div class="card-title">🕐 Recent Activity</div></div><div id="dash-recent"><div class="loader"><span class="spin"></span>Loading...</div></div></div>
+        <div class="card"><div class="card-hdr"><div class="card-title">📊 Today's Status</div></div><div id="dash-status"></div></div>
+      </div>
+    </div>
+
+    <!-- PATIENTS -->
+    <div class="page" id="page-patients">
+      <div class="ph">
+        <div class="ph-l"><h2>Patients</h2><p id="pt-sub">All registered patients</p></div>
+        <div class="ph-r" id="pt-acts"></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="flex-wrap:wrap;gap:10px;">
+          <input class="sbar" id="pts-search" placeholder="🔍  Search name, token, phone..." oninput="filterPts()" style="flex:1;min-width:200px;">
+          <select id="pts-sf" onchange="filterPts()" style="padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer;">
+            <option value="">All Status</option>
+            <option value="waiting">Waiting</option>
+            <option value="in-progress">In Progress</option>
+            <option value="prescribed">Prescribed</option>
+            <option value="under-treatment">Under Treatment</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="tw"><table><thead><tr><th>Token</th><th>Patient</th><th>Age/Gender</th><th>Blood</th><th>Phone</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="pts-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- QUEUE -->
+    <div class="page" id="page-queue">
+      <div class="ph">
+        <div class="ph-l"><h2>Patient Queue</h2><p>Today — <span id="qcount">0</span> patients</p></div>
+        <div class="ph-r"><button class="btn btn-ghost btn-sm" onclick="loadQueue()">🔄 Refresh</button></div>
+      </div>
+      <div class="sf" id="q-sf"></div>
+      <div id="qlist"></div>
+    </div>
+
+    <!-- PRESCRIPTIONS -->
+    <div class="page" id="page-prescriptions">
+      <div class="ph">
+        <div class="ph-l"><h2>Prescriptions</h2><p>All medical prescriptions</p></div>
+        <div class="ph-r"><button class="btn btn-ghost btn-sm" onclick="loadRx()">🔄 Refresh</button></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><input class="sbar" id="rx-search" placeholder="🔍  Search patient, token, diagnosis..." oninput="filterRx()" style="max-width:380px;"></div>
+        <div class="tw"><table><thead><tr><th>Token</th><th>Patient</th><th>Diagnosis</th><th>Date</th><th>Follow-up</th><th>Doctor</th><th>Actions</th></tr></thead><tbody id="rx-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- BILLING -->
+    <div class="page" id="page-billing">
+      <div class="ph">
+        <div class="ph-l"><h2>Billing</h2><p>Patient bills and payments</p></div>
+        <div class="ph-r"><button class="btn btn-ghost btn-sm" onclick="loadBilling()">🔄 Refresh</button></div>
+      </div>
+      <div class="card">
+        <div class="tw"><table><thead><tr><th>Token</th><th>Patient</th><th>Consult</th><th>Lab</th><th>Medicine</th><th>Other</th><th>Disc.</th><th>Total</th><th>Payment</th><th>Date</th><th>Actions</th></tr></thead><tbody id="bill-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="page" id="page-history">
+      <div class="ph"><div class="ph-l"><h2>Patient History</h2><p>Complete medical records lookup</p></div></div>
+      <div class="card"><input class="sbar" id="h-search" placeholder="🔍  Type patient name or token to search..." oninput="searchHistory()"></div>
+      <div id="h-results"></div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc,
+         query, where, orderBy, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const fbApp = initializeApp({
+  apiKey: "AIzaSyDgtgVzLbZhZ2Nw_PSbfPl52bRUTDG_OP8",
+    authDomain: "clinic-management-system-43291.firebaseapp.com",
+    databaseURL: "https://clinic-management-system-43291-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "clinic-management-system-43291",
+    storageBucket: "clinic-management-system-43291.firebasestorage.app",
+    messagingSenderId: "771938620534",
+    appId: "1:771938620534:web:981c6d0082bcba3653fb57",
+    measurementId: "G-RBT9GB6XG9"
+});
+const auth = getAuth(fbApp);
+const db   = getFirestore(fbApp);
+
+// STATE
+let role='doctor', user=null;
+let editPid=null, editRxId=null, editBillId=null, stPid=null, selPat=null;
+let allPts=[], allRx=[], allBills=[];
+
+// HELPERS
+window.log = (m,l='info')=>{
+  const e=`[${new Date().toISOString()}] [${l.toUpperCase()}] ${m}`;
+  console[l==='error'?'error':'log'](e);
+  try{const ls=JSON.parse(sessionStorage.getItem('mf')||'[]');ls.push(e);sessionStorage.setItem('mf',JSON.stringify(ls.slice(-200)));}catch(_){}
+};
+window.notify=(m,t='success')=>{
+  const n=document.getElementById('notif');
+  n.innerHTML=`<span>${t==='success'?'✓':t==='error'?'✕':'ℹ'}</span> ${m}`;
+  n.className=`notif ${t} show`; clearTimeout(n._t);
+  n._t=setTimeout(()=>n.classList.remove('show'),3500);
+};
+const td=()=>new Date().toISOString().split('T')[0];
+const sb=s=>({'waiting':'badge-warn','in-progress':'badge-blue','prescribed':'badge-green','under-treatment':'badge-purple','completed':'badge-green','cancelled':'badge-red'}[s]||'badge-warn');
+const se=s=>({'waiting':'⏳','in-progress':'🔄','prescribed':'✅','under-treatment':'💊','completed':'🏁','cancelled':'❌'}[s]||'⏳');
+window.openModal =id=>document.getElementById(id).classList.add('open');
+window.closeModal=id=>document.getElementById(id).classList.remove('open');
+document.querySelectorAll('.mo').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+
+// AUTH
+window.setRole=r=>{
+  role=r;
+  document.querySelectorAll('.role-tab').forEach(t=>t.classList.toggle('active',(r==='doctor'&&t.textContent.includes('Doctor'))||(r==='receptionist'&&t.textContent.includes('Receptionist'))));
+};
+window.signIn=async()=>{
+  const e=document.getElementById('ae').value.trim(),p=document.getElementById('ap').value,er=document.getElementById('aerr');
+  if(!e||!p){er.textContent='Fill in all fields.';er.style.display='block';return;}
+  try{er.style.display='none';await signInWithEmailAndPassword(auth,e,p);log('SignIn: '+e);}
+  catch(x){er.textContent=x.message.replace('Firebase: ','').replace(/\(.*\)/,'');er.style.display='block';}
+};
+window.signUp=async()=>{
+  const e=document.getElementById('ae').value.trim(),p=document.getElementById('ap').value,er=document.getElementById('aerr');
+  if(!e||!p){er.textContent='Fill in all fields.';er.style.display='block';return;}
+  if(p.length<6){er.textContent='Password must be at least 6 characters.';er.style.display='block';return;}
+  try{
+    er.style.display='none';
+    const c=await createUserWithEmailAndPassword(auth,e,p);
+    await addDoc(collection(db,'users'),{uid:c.user.uid,email:e,role,createdAt:serverTimestamp()});
+    log('Registered: '+e+' as '+role); notify('Account created! Welcome.','success');
+  }catch(x){er.textContent=x.message.replace('Firebase: ','').replace(/\(.*\)/,'');er.style.display='block';}
+};
+window.logout=async()=>{await signOut(auth);allPts=[];allRx=[];allBills=[];log('Signed out');};
+
+onAuthStateChanged(auth,async u=>{
+  if(u){
+    user=u;
+    const q=query(collection(db,'users'),where('uid','==',u.uid));
+    const s=await getDocs(q);
+    if(!s.empty) role=s.docs[0].data().role;
+    document.getElementById('auth-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    initApp();
+  } else {
+    document.getElementById('auth-screen').style.display='flex';
+    document.getElementById('app').style.display='none';
+  }
+});
+
+function initApp(){
+  const un=user.email.split('@')[0];
+  document.getElementById('rbadge').textContent=role.charAt(0).toUpperCase()+role.slice(1);
+  document.getElementById('uav').textContent=un[0].toUpperCase();
+  document.getElementById('uname').textContent=un;
+  document.getElementById('uemail').textContent=user.email;
+
+  const navItems=[
+    {sec:'Overview'},{icon:'📊',label:'Dashboard',page:'dashboard'},
+    {sec:'Clinical'},{icon:'👥',label:'All Patients',page:'patients'},
+    {icon:'🏥',label:"Today's Queue",page:'queue'},
+    {icon:'📋',label:'Prescriptions',page:'prescriptions'},
+    {sec:'Records'},{icon:'📁',label:'Patient History',page:'history'},
+    {icon:'💰',label:'Billing',page:'billing'},
+  ];
+  document.getElementById('snav').innerHTML=navItems.map(i=>
+    i.sec?`<div class="nav-sec">${i.sec}</div>`:
+    `<button class="nav-item ${i.page==='dashboard'?'active':''}" data-page="${i.page}" onclick="navigate('${i.page}')"><span class="ni">${i.icon}</span>${i.label}</button>`
+  ).join('');
+  loadDashboard();
+  log('App init: '+user.email+' ['+role+']');
+}
+
+window.navigate=page=>{
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===page));
+  document.getElementById('page-'+page).classList.add('active');
+  ({dashboard:loadDashboard,patients:loadPts,queue:loadQueue,prescriptions:loadRx,billing:loadBilling}[page]||function(){})();
+  if(page==='history') document.getElementById('h-results').innerHTML='';
+  log('Nav: '+page);
+};
+
+// ——— TOKEN ———
+async function genToken(){
+  const t=td();
+  const s=await getDocs(query(collection(db,'patients'),where('date','==',t)));
+  return `TK-${t.replace(/-/g,'')}-${String(s.size+1).padStart(3,'0')}`;
+}
+
+// ==============================
+// PATIENTS CRUD
+// ==============================
+window.openRegPt=()=>{
+  editPid=null;
+  document.getElementById('m-patient-title').textContent='Register New Patient';
+  document.getElementById('btn-sp').textContent='🎫 Register & Token';
+  ['pn','pa','pp','pe','pad','pc','pmh'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pg').value='Male'; document.getElementById('pb').value='';
+  openModal('m-patient');
+};
+window.openEditPt=async pid=>{
+  const s=await getDoc(doc(db,'patients',pid));
+  if(!s.exists()) return;
+  const p=s.data(); editPid=pid;
+  document.getElementById('m-patient-title').textContent='Edit Patient Record';
+  document.getElementById('btn-sp').textContent='💾 Save Changes';
+  document.getElementById('pn').value=p.name||'';
+  document.getElementById('pa').value=p.age||'';
+  document.getElementById('pg').value=p.gender||'Male';
+  document.getElementById('pb').value=p.blood||'';
+  document.getElementById('pp').value=p.phone||'';
+  document.getElementById('pe').value=p.email||'';
+  document.getElementById('pad').value=p.address||'';
+  document.getElementById('pc').value=p.complaint||'';
+  document.getElementById('pmh').value=p.medHistory||'';
+  openModal('m-patient'); log('Edit patient: '+pid);
+};
+window.savePatient=async()=>{
+  const name=document.getElementById('pn').value.trim();
+  const age=document.getElementById('pa').value;
+  const complaint=document.getElementById('pc').value.trim();
+  if(!name||!age||!complaint){notify('Name, age and complaint are required','error');return;}
+  const data={
+    name,age:parseInt(age),gender:document.getElementById('pg').value,
+    blood:document.getElementById('pb').value,phone:document.getElementById('pp').value.trim(),
+    email:document.getElementById('pe').value.trim(),address:document.getElementById('pad').value.trim(),
+    complaint,medHistory:document.getElementById('pmh').value.trim(),
+    updatedAt:serverTimestamp(),updatedBy:user.uid
+  };
+  if(editPid){
+    await updateDoc(doc(db,'patients',editPid),data);
+    log('Patient updated: '+editPid); notify('Patient updated','success');
+  } else {
+    const token=await genToken();
+    await addDoc(collection(db,'patients'),{...data,token,date:td(),status:'waiting',createdBy:user.uid,createdAt:serverTimestamp()});
+    log('Registered: '+name+' '+token); notify(`Token ${token} assigned to ${name}`,'success');
+  }
+  closeModal('m-patient'); loadPts();
+};
+window.deletePt=pid=>{
+  document.getElementById('conf-msg').textContent='Delete this patient? Bills and prescriptions will remain.';
+  document.getElementById('btn-conf').onclick=async()=>{
+    await deleteDoc(doc(db,'patients',pid));
+    log('Patient deleted: '+pid); notify('Patient deleted','info');
+    closeModal('m-confirm'); loadPts();
+  };
+  openModal('m-confirm');
+};
+
+window.loadPts=async()=>{
+  document.getElementById('pts-tbody').innerHTML=`<tr><td colspan="8" class="loader"><span class="spin"></span>Loading...</td></tr>`;
+  document.getElementById('pt-acts').innerHTML=`<button class="btn btn-primary" onclick="openRegPt()">➕ ${role==='receptionist'?'Register':'Add'} Patient</button>`;
+  document.getElementById('pt-sub').textContent=role==='receptionist'?'Register and manage patients':'View and manage all patient records';
+  const s=await getDocs(query(collection(db,'patients'),orderBy('createdAt','desc')));
+  allPts=s.docs.map(d=>({id:d.id,...d.data()}));
+  renderPts(allPts); log('Patients: '+allPts.length);
+};
+
+function renderPts(pts){
+  const tb=document.getElementById('pts-tbody');
+  if(!pts.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="ei">👥</div><p>No patients found</p></div></td></tr>`;return;}
+  tb.innerHTML=pts.map(p=>`<tr>
+    <td><span class="badge-token">${p.token}</span></td>
+    <td><div style="font-weight:600">${p.name}</div><div style="font-size:11px;color:var(--muted)">${p.email||''}</div></td>
+    <td>${p.age}y / ${p.gender}</td>
+    <td>${p.blood?`<span class="badge badge-red">${p.blood}</span>`:'—'}</td>
+    <td style="font-size:12.5px">${p.phone||'—'}</td>
+    <td style="color:var(--muted);font-size:11.5px">${p.date}</td>
+    <td><span class="badge ${sb(p.status)}">${se(p.status)} ${p.status}</span></td>
+    <td><div class="tda">
+      <button class="btn btn-ghost btn-xs" onclick="viewRecord('${p.id}')">👁 View</button>
+      <button class="btn btn-ghost btn-xs" onclick="openEditPt('${p.id}')">✏️ Edit</button>
+      <button class="btn btn-warn btn-xs" onclick="openStModal('${p.id}')">🔄 Status</button>
+      ${role==='doctor'?`<button class="btn btn-purple btn-xs" onclick="openRxModal('${p.id}')">📋 Rx</button>`:''}
+      <button class="btn btn-success btn-xs" onclick="openBillModal('${p.id}')">💰 Bill</button>
+      ${role==='receptionist'?`<button class="btn btn-danger btn-xs" onclick="deletePt('${p.id}')">🗑</button>`:''}
+    </div></td>
+  </tr>`).join('');
+}
+
+window.filterPts=()=>{
+  const q=document.getElementById('pts-search').value.toLowerCase();
+  const st=document.getElementById('pts-sf').value;
+  renderPts(allPts.filter(p=>
+    (!q||p.name.toLowerCase().includes(q)||(p.token||'').toLowerCase().includes(q)||(p.phone||'').includes(q))&&
+    (!st||p.status===st)
+  ));
+};
+
+// ==============================
+// VIEW FULL RECORD
+// ==============================
+window.viewRecord=async pid=>{
+  try {
+  const ps=await getDoc(doc(db,'patients',pid));
+  if(!ps.exists()){notify('Patient not found','error');return;}
+  const p={id:pid,...ps.data()};
+  const [rs,bs]=await Promise.all([
+    getDocs(query(collection(db,'prescriptions'),where('patientId','==',pid))),
+    getDocs(query(collection(db,'bills'),where('patientId','==',pid)))
+  ]);
+  // Sort newest-first in JS (avoids needing a Firestore composite index)
+  const rxs=rs.docs.map(d=>({id:d.id,...d.data()}))
+    .sort((a,b)=>(b.createdAt?.seconds??0)-(a.createdAt?.seconds??0));
+  const bills=bs.docs.map(d=>({id:d.id,...d.data()}))
+    .sort((a,b)=>(b.createdAt?.seconds??0)-(a.createdAt?.seconds??0));
+  const spent=bills.reduce((s,b)=>s+b.total,0);
+
+  document.getElementById('view-content').innerHTML=`
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#060d1a;flex-shrink:0;">${p.name[0].toUpperCase()}</div>
+      <div style="flex:1"><div style="font-family:'Syne',sans-serif;font-size:19px;font-weight:800;">${p.name}</div>
+      <div style="color:var(--muted);font-size:12px;margin-top:2px;">${p.token} · ${p.age}y · ${p.gender} ${p.blood?'· '+p.blood:''}</div></div>
+      <span class="badge ${sb(p.status)}">${se(p.status)} ${p.status}</span>
+    </div>
+    <div class="ig" style="margin-bottom:16px;">
+      <div class="ii"><label>Phone</label><div class="val">${p.phone||'—'}</div></div>
+      <div class="ii"><label>Email</label><div class="val">${p.email||'—'}</div></div>
+      <div class="ii"><label>Address</label><div class="val">${p.address||'—'}</div></div>
+      <div class="ii"><label>Registered</label><div class="val">${p.date}</div></div>
+      <div class="ii" style="grid-column:1/-1"><label>Chief Complaint</label><div class="val">${p.complaint}</div></div>
+      ${p.medHistory?`<div class="ii" style="grid-column:1/-1"><label>Medical History / Allergies</label><div class="val">${p.medHistory}</div></div>`:''}
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;">
+      <div style="flex:1;background:var(--surface2);border-radius:10px;padding:13px;text-align:center;"><div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--purple)">${rxs.length}</div><div style="font-size:11px;color:var(--muted)">Prescriptions</div></div>
+      <div style="flex:1;background:var(--surface2);border-radius:10px;padding:13px;text-align:center;"><div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent3)">${bills.length}</div><div style="font-size:11px;color:var(--muted)">Bills</div></div>
+      <div style="flex:1;background:var(--surface2);border-radius:10px;padding:13px;text-align:center;"><div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--warn)">₹${spent.toLocaleString()}</div><div style="font-size:11px;color:var(--muted)">Total Spent</div></div>
+    </div>
+    <div class="sep"></div>
+    <div class="slbl">📋 Prescriptions (${rxs.length})</div>
+    ${rxs.length?rxs.map(r=>`
+      <div class="rx-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;">
+          <div><div style="font-weight:600;font-size:13.5px;">${r.diagnosis}</div>
+          <div style="font-size:11px;color:var(--accent);margin-top:2px;">📅 ${r.date}${r.followup?' · Follow-up: '+r.followup:''}</div></div>
+          <div style="display:flex;gap:5px;">
+            ${role==='doctor'?`<button class="btn btn-ghost btn-xs" onclick="closeModal('m-view');openEditRx('${r.id}')">✏️</button><button class="btn btn-danger btn-xs" onclick="closeModal('m-view');deleteRx('${r.id}')">🗑</button>`:''}
+          </div>
+        </div>
+        <div style="font-size:12.5px;white-space:pre-line;margin-bottom:5px;">${r.medications}</div>
+        ${r.tests?`<div style="font-size:11.5px;color:var(--muted)">🔬 Tests: ${r.tests}</div>`:''}
+        ${r.notes?`<div style="font-size:11.5px;color:var(--muted);margin-top:3px;">📝 ${r.notes}</div>`:''}
+      </div>`).join(''):`<div style="color:var(--muted);font-size:13px;padding:8px 0;">No prescriptions yet.</div>`}
+    <div class="sep"></div>
+    <div class="slbl">💰 Bills (${bills.length})</div>
+    ${bills.length?bills.map(b=>`
+      <div class="rx-card" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:12.5px;color:var(--muted);">📅 ${b.date} · ${b.payment||'Cash'}</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">Consult: ₹${b.consult} | Lab: ₹${b.lab} | Med: ₹${b.medicinesCost||0} | Other: ₹${b.other} | Disc: -₹${b.discount||0}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent3);">₹${b.total.toLocaleString()}</div>
+          <button class="btn btn-ghost btn-xs" onclick="closeModal('m-view');openEditBill('${b.id}')">✏️</button>
+          <button class="btn btn-danger btn-xs" onclick="closeModal('m-view');deleteBill('${b.id}')">🗑</button>
+        </div>
+      </div>`).join(''):`<div style="color:var(--muted);font-size:13px;padding:8px 0;">No bills yet.</div>`}
+    <div class="ma" style="margin-top:14px;">
+      ${role==='doctor'?`<button class="btn btn-primary btn-sm" onclick="closeModal('m-view');openRxModal('${p.id}')">📋 Write Rx</button>`:''}
+      <button class="btn btn-success btn-sm" onclick="closeModal('m-view');openBillModal('${p.id}')">💰 Bill</button>
+      <button class="btn btn-warn btn-sm" onclick="closeModal('m-view');openStModal('${p.id}')">🔄 Status</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('m-view');openEditPt('${p.id}')">✏️ Edit</button>
+    </div>
+  `;
+  openModal('m-view'); log('View record: '+pid);
+  } catch(err){
+    log('viewRecord error: '+err.message,'error');
+    notify('Error loading record: '+err.message,'error');
+  }
+};
+
+// ==============================
+// STATUS UPDATE
+// ==============================
+window.openStModal=async pid=>{
+  stPid=pid;
+  const s=await getDoc(doc(db,'patients',pid));
+  if(!s.exists()) return;
+  const p=s.data();
+  document.getElementById('st-pinfo').innerHTML=`<div style="font-weight:600;">${p.name}</div><div style="font-size:12px;color:var(--muted);">${p.token} · <span class="badge ${sb(p.status)}">${se(p.status)} ${p.status}</span></div>`;
+  document.getElementById('st-sel').value=p.status||'waiting';
+  document.getElementById('st-rem').value='';
+  openModal('m-status');
+};
+window.updateStatus=async()=>{
+  const ns=document.getElementById('st-sel').value;
+  const rem=document.getElementById('st-rem').value.trim();
+  await updateDoc(doc(db,'patients',stPid),{status:ns,statusRemarks:rem,statusAt:serverTimestamp(),statusBy:user.uid});
+  log('Status: '+stPid+' → '+ns); notify('Status updated: '+ns,'success');
+  closeModal('m-status');
+  const ap=document.querySelector('.page.active')?.id;
+  if(ap==='page-patients') loadPts();
+  if(ap==='page-queue') loadQueue();
+};
+
+// ==============================
+// QUEUE
+// ==============================
+window.loadQueue=async()=>{
+  const c=document.getElementById('qlist');
+  c.innerHTML=`<div class="loader"><span class="spin"></span>Loading...</div>`;
+  try {
+    // Single where() only — avoids Firestore composite index requirement.
+    // Sort by createdAt in JS.
+    const s=await getDocs(query(collection(db,'patients'),where('date','==',td())));
+    const pts=s.docs.map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=>(a.createdAt?.seconds??0)-(b.createdAt?.seconds??0));
+    document.getElementById('qcount').textContent=pts.length;
+    allPts=pts;
+
+    const cnt={};
+    pts.forEach(p=>{cnt[p.status]=(cnt[p.status]||0)+1;});
+    const steps=['waiting','in-progress','prescribed','completed'];
+    document.getElementById('q-sf').innerHTML=steps.map(s=>`<div class="sf-step ${cnt[s]?'s-active':''}">${se(s)} ${s} (${cnt[s]||0})</div>`).join('');
+
+    if(!pts.length){c.innerHTML=`<div class="empty"><div class="ei">🏥</div><p>No patients registered today</p></div>`;return;}
+    c.innerHTML=pts.map(p=>`
+      <div class="qc">
+        <div class="qt-box"><div class="qt-num">${p.token.split('-').pop()}</div><div class="qt-lbl">Token</div></div>
+        <div class="qi">
+          <div class="qname">${p.name} <span style="font-size:11.5px;color:var(--muted);font-weight:400">${p.age}y · ${p.gender}${p.blood?' · '+p.blood:''}</span></div>
+          <div class="qmeta">${p.phone||'—'} · ${p.address||'—'}</div>
+          <div class="qcomp">${p.complaint}</div>
+          ${p.medHistory?`<div style="font-size:11px;color:var(--muted2);margin-top:3px;">Hx: ${p.medHistory}</div>`:''}
+        </div>
+        <div class="qact">
+          <span class="badge ${sb(p.status)}">${se(p.status)} ${p.status}</span>
+          <button class="btn btn-ghost btn-sm" onclick="viewRecord('${p.id}')">👁 Full Record</button>
+          <button class="btn btn-warn btn-sm" onclick="openStModal('${p.id}')">🔄 Status</button>
+          ${role==='doctor'?`<button class="btn btn-primary btn-sm" onclick="openRxModal('${p.id}')">📋 Write Rx</button>`:''}
+          <button class="btn btn-success btn-sm" onclick="openBillModal('${p.id}')">💰 Bill</button>
+        </div>
+      </div>
+    `).join('');
+    log('Queue: '+pts.length);
+  } catch(err) {
+    log('Queue load error: '+err.message,'error');
+    c.innerHTML=`<div class="empty"><div class="ei">⚠️</div><p>Could not load queue.<br><small style="opacity:0.5">${err.message}</small></p></div>`;
+  }
+};
+
+// ==============================
+// PRESCRIPTIONS CRUD
+// ==============================
+window.openRxModal=async pid=>{
+  editRxId=null;
+  const s=await getDoc(doc(db,'patients',pid));
+  if(!s.exists()) return;
+  selPat={id:pid,...s.data()};
+  document.getElementById('m-rx-title').textContent='Write Prescription';
+  document.getElementById('btn-srx').textContent='💾 Save Prescription';
+  ['rxd','rxm','rxn','rxt','rxf'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rxst').value='prescribed';
+  document.getElementById('rx-pinfo').innerHTML=`
+    <div style="display:flex;align-items:center;gap:11px;">
+      <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;color:#060d1a;">${selPat.name[0]}</div>
+      <div><div style="font-weight:600;">${selPat.name}</div><div style="font-size:11.5px;color:var(--muted);">${selPat.token} · ${selPat.age}y · ${selPat.gender}${selPat.blood?' · '+selPat.blood:''}</div></div>
+    </div>
+    <div style="margin-top:9px;font-size:13px;"><strong>Complaint:</strong> ${selPat.complaint}</div>
+    ${selPat.medHistory?`<div style="margin-top:3px;font-size:11.5px;color:var(--muted);">Hx/Allergies: ${selPat.medHistory}</div>`:''}
+  `;
+  openModal('m-rx');
+};
+window.openEditRx=async rxid=>{
+  const s=await getDoc(doc(db,'prescriptions',rxid));
+  if(!s.exists()) return;
+  const r=s.data(); editRxId=rxid;
+  const ps=await getDoc(doc(db,'patients',r.patientId));
+  selPat=ps.exists()?{id:r.patientId,...ps.data()}:{id:r.patientId,name:r.patientName,token:r.token,complaint:'—'};
+  document.getElementById('m-rx-title').textContent='Edit Prescription';
+  document.getElementById('btn-srx').textContent='💾 Update Prescription';
+  document.getElementById('rxd').value=r.diagnosis||'';
+  document.getElementById('rxm').value=r.medications||'';
+  document.getElementById('rxn').value=r.notes||'';
+  document.getElementById('rxt').value=r.tests||'';
+  document.getElementById('rxf').value=r.followup||'';
+  document.getElementById('rxst').value=r.statusSet||'prescribed';
+  document.getElementById('rx-pinfo').innerHTML=`<div style="font-weight:600;">${selPat.name}</div><div style="font-size:11.5px;color:var(--muted);">${r.token} · Editing from ${r.date}</div>`;
+  openModal('m-rx'); log('Edit Rx: '+rxid);
+};
+window.saveRx=async()=>{
+  const diag=document.getElementById('rxd').value.trim();
+  const meds=document.getElementById('rxm').value.trim();
+  if(!diag||!meds){notify('Diagnosis and medications required','error');return;}
+  const data={
+    patientId:selPat.id,patientName:selPat.name,token:selPat.token,
+    diagnosis:diag,medications:meds,
+    notes:document.getElementById('rxn').value.trim(),
+    tests:document.getElementById('rxt').value.trim(),
+    followup:document.getElementById('rxf').value,
+    statusSet:document.getElementById('rxst').value,
+    doctorId:user.uid,doctorEmail:user.email,updatedAt:serverTimestamp()
+  };
+  if(editRxId){
+    await updateDoc(doc(db,'prescriptions',editRxId),data);
+    log('Rx updated: '+editRxId); notify('Prescription updated','success');
+  } else {
+    data.date=td(); data.createdAt=serverTimestamp();
+    await addDoc(collection(db,'prescriptions'),data);
+    log('Rx saved: '+selPat.name); notify('Prescription saved','success');
+  }
+  await updateDoc(doc(db,'patients',selPat.id),{status:document.getElementById('rxst').value,statusAt:serverTimestamp()});
+  closeModal('m-rx');
+  const ap=document.querySelector('.page.active')?.id;
+  if(ap==='page-prescriptions') loadRx();
+  if(ap==='page-queue') loadQueue();
+  if(ap==='page-patients') loadPts();
+};
+window.deleteRx=rxid=>{
+  document.getElementById('conf-msg').textContent='Delete this prescription? Cannot be undone.';
+  document.getElementById('btn-conf').onclick=async()=>{
+    await deleteDoc(doc(db,'prescriptions',rxid));
+    log('Rx deleted: '+rxid); notify('Prescription deleted','info');
+    closeModal('m-confirm'); loadRx();
+  };
+  openModal('m-confirm');
+};
+
+window.loadRx=async()=>{
+  document.getElementById('rx-tbody').innerHTML=`<tr><td colspan="7" class="loader"><span class="spin"></span>Loading...</td></tr>`;
+  const s=await getDocs(query(collection(db,'prescriptions'),orderBy('createdAt','desc')));
+  allRx=s.docs.map(d=>({id:d.id,...d.data()}));
+  renderRx(allRx); log('Rx: '+allRx.length);
+};
+function renderRx(rxs){
+  const tb=document.getElementById('rx-tbody');
+  if(!rxs.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="ei">📋</div><p>No prescriptions yet</p></div></td></tr>`;return;}
+  tb.innerHTML=rxs.map(r=>`<tr>
+    <td><span class="badge-token">${r.token}</span></td>
+    <td><strong>${r.patientName}</strong></td>
+    <td>${r.diagnosis}</td>
+    <td style="color:var(--muted);font-size:11.5px">${r.date}</td>
+    <td style="color:${r.followup?'var(--accent3)':'var(--muted)'};font-size:11.5px">${r.followup||'—'}</td>
+    <td style="color:var(--muted);font-size:11px">${r.doctorEmail||'—'}</td>
+    <td><div class="tda">
+      <button class="btn btn-ghost btn-xs" onclick="viewRxDetail('${r.id}')">👁 View</button>
+      ${role==='doctor'?`<button class="btn btn-ghost btn-xs" onclick="openEditRx('${r.id}')">✏️ Edit</button>
+      <button class="btn btn-danger btn-xs" onclick="deleteRx('${r.id}')">🗑</button>`:''}
+    </div></td>
+  </tr>`).join('');
+}
+window.filterRx=()=>{
+  const q=document.getElementById('rx-search').value.toLowerCase();
+  renderRx(allRx.filter(r=>!q||r.patientName.toLowerCase().includes(q)||(r.token||'').toLowerCase().includes(q)||r.diagnosis.toLowerCase().includes(q)));
+};
+window.viewRxDetail=async rxid=>{
+  const s=await getDoc(doc(db,'prescriptions',rxid));
+  if(!s.exists()) return;
+  const r=s.data();
+  document.getElementById('rxv-content').innerHTML=`
+    <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:14px;">
+      <div style="font-weight:600;font-size:14.5px;">${r.patientName}</div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">${r.token} · ${r.date} · ${r.doctorEmail||'—'}</div>
+    </div>
+    <div class="ig" style="margin-bottom:14px;">
+      <div class="ii" style="grid-column:1/-1"><label>Diagnosis</label><div class="val" style="font-size:15px;color:var(--accent);">${r.diagnosis}</div></div>
+      <div class="ii" style="grid-column:1/-1"><label>Medications</label><div class="val" style="white-space:pre-line;font-size:13px;">${r.medications}</div></div>
+      ${r.tests?`<div class="ii" style="grid-column:1/-1"><label>Tests Ordered</label><div class="val">${r.tests}</div></div>`:''}
+      ${r.notes?`<div class="ii" style="grid-column:1/-1"><label>Notes & Advice</label><div class="val">${r.notes}</div></div>`:''}
+      ${r.followup?`<div class="ii"><label>Follow-up</label><div class="val" style="color:var(--accent3);">${r.followup}</div></div>`:''}
+    </div>
+  `;
+  document.getElementById('rxv-actions').innerHTML=role==='doctor'?`
+    <button class="btn btn-ghost" onclick="closeModal('m-rxv')">Close</button>
+    <button class="btn btn-ghost" onclick="closeModal('m-rxv');openEditRx('${rxid}')">✏️ Edit</button>
+    <button class="btn btn-danger" onclick="closeModal('m-rxv');deleteRx('${rxid}')">🗑 Delete</button>
+  `:`<button class="btn btn-ghost" onclick="closeModal('m-rxv')">Close</button>`;
+  openModal('m-rxv');
+};
+
+// ==============================
+// BILLING CRUD
+// ==============================
+window.openBillModal=async pid=>{
+  editBillId=null;
+  const s=await getDoc(doc(db,'patients',pid));
+  if(!s.exists()) return;
+  selPat={id:pid,...s.data()};
+  document.getElementById('m-bill-title').textContent='Generate Bill';
+  document.getElementById('btn-sbill').textContent='🧾 Generate Bill';
+  ['bc','bl','bm','bo','bd'].forEach((id,i)=>document.getElementById(id).value=i===0?'500':'0');
+  document.getElementById('bpay').value='Cash';
+  document.getElementById('bill-pinfo').innerHTML=`
+    <div style="display:flex;align-items:center;gap:11px;">
+      <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent3),#059669);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;color:#fff;">${selPat.name[0]}</div>
+      <div><div style="font-weight:600;">${selPat.name}</div><div style="font-size:11.5px;color:var(--muted);">${selPat.token} · ${selPat.age}y</div></div>
+    </div>`;
+  calcTotal(); openModal('m-bill');
+};
+window.openEditBill=async bid=>{
+  const s=await getDoc(doc(db,'bills',bid));
+  if(!s.exists()) return;
+  const b=s.data(); editBillId=bid;
+  const ps=await getDoc(doc(db,'patients',b.patientId));
+  selPat=ps.exists()?{id:b.patientId,...ps.data()}:{id:b.patientId,name:b.patientName,token:b.token};
+  document.getElementById('m-bill-title').textContent='Edit Bill';
+  document.getElementById('btn-sbill').textContent='💾 Update Bill';
+  document.getElementById('bc').value=b.consult||0;
+  document.getElementById('bl').value=b.lab||0;
+  document.getElementById('bm').value=b.medicinesCost||0;
+  document.getElementById('bo').value=b.other||0;
+  document.getElementById('bd').value=b.discount||0;
+  document.getElementById('bpay').value=b.payment||'Cash';
+  document.getElementById('bill-pinfo').innerHTML=`<div style="font-weight:600;">${selPat.name}</div><div style="font-size:11.5px;color:var(--muted);">${b.token} · Editing from ${b.date}</div>`;
+  calcTotal(); openModal('m-bill'); log('Edit bill: '+bid);
+};
+window.calcTotal=()=>{
+  const c=parseFloat(document.getElementById('bc').value)||0;
+  const l=parseFloat(document.getElementById('bl').value)||0;
+  const m=parseFloat(document.getElementById('bm').value)||0;
+  const o=parseFloat(document.getElementById('bo').value)||0;
+  const d=parseFloat(document.getElementById('bd').value)||0;
+  document.getElementById('btotal').textContent='₹ '+Math.max(0,c+l+m+o-d).toLocaleString();
+};
+window.saveBill=async()=>{
+  const c=parseFloat(document.getElementById('bc').value)||0;
+  const l=parseFloat(document.getElementById('bl').value)||0;
+  const m=parseFloat(document.getElementById('bm').value)||0;
+  const o=parseFloat(document.getElementById('bo').value)||0;
+  const d=parseFloat(document.getElementById('bd').value)||0;
+  const total=Math.max(0,c+l+m+o-d);
+  const payment=document.getElementById('bpay').value;
+  const data={patientId:selPat.id,patientName:selPat.name,token:selPat.token,consult:c,lab:l,medicinesCost:m,other:o,discount:d,total,payment,generatedBy:user.uid,updatedAt:serverTimestamp()};
+  if(editBillId){
+    await updateDoc(doc(db,'bills',editBillId),data);
+    log('Bill updated: '+editBillId); notify('Bill updated: ₹'+total.toLocaleString(),'success');
+  } else {
+    data.date=td(); data.createdAt=serverTimestamp();
+    await addDoc(collection(db,'bills'),data);
+    await updateDoc(doc(db,'patients',selPat.id),{status:'completed',statusAt:serverTimestamp()});
+    log('Bill: '+selPat.name+' ₹'+total); notify('Bill generated: ₹'+total.toLocaleString(),'success');
+  }
+  closeModal('m-bill');
+  const ap=document.querySelector('.page.active')?.id;
+  if(ap==='page-billing') loadBilling();
+  if(ap==='page-queue') loadQueue();
+  if(ap==='page-patients') loadPts();
+};
+window.deleteBill=bid=>{
+  document.getElementById('conf-msg').textContent='Delete this bill? Cannot be undone.';
+  document.getElementById('btn-conf').onclick=async()=>{
+    await deleteDoc(doc(db,'bills',bid));
+    log('Bill deleted: '+bid); notify('Bill deleted','info');
+    closeModal('m-confirm'); loadBilling();
+  };
+  openModal('m-confirm');
+};
+window.loadBilling=async()=>{
+  document.getElementById('bill-tbody').innerHTML=`<tr><td colspan="11" class="loader"><span class="spin"></span>Loading...</td></tr>`;
+  const s=await getDocs(query(collection(db,'bills'),orderBy('createdAt','desc')));
+  allBills=s.docs.map(d=>({id:d.id,...d.data()}));
+  renderBills(allBills); log('Bills: '+allBills.length);
+};
+function renderBills(bills){
+  const tb=document.getElementById('bill-tbody');
+  if(!bills.length){tb.innerHTML=`<tr><td colspan="11"><div class="empty"><div class="ei">💰</div><p>No bills yet</p></div></td></tr>`;return;}
+  tb.innerHTML=bills.map(b=>`<tr>
+    <td><span class="badge-token">${b.token}</span></td>
+    <td><strong>${b.patientName}</strong></td>
+    <td>₹${b.consult||0}</td><td>₹${b.lab||0}</td><td>₹${b.medicinesCost||0}</td><td>₹${b.other||0}</td>
+    <td style="color:var(--danger)">-₹${b.discount||0}</td>
+    <td style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent3);">₹${b.total.toLocaleString()}</td>
+    <td><span class="badge badge-blue">${b.payment||'Cash'}</span></td>
+    <td style="color:var(--muted);font-size:11.5px">${b.date}</td>
+    <td><div class="tda">
+      <button class="btn btn-ghost btn-xs" onclick="openEditBill('${b.id}')">✏️ Edit</button>
+      <button class="btn btn-danger btn-xs" onclick="deleteBill('${b.id}')">🗑</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+// ==============================
+// DASHBOARD
+// ==============================
+window.loadDashboard=async()=>{
+  const h=new Date().getHours();
+  const gr=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  document.getElementById('dg').textContent=gr+' 👋';
+  document.getElementById('ds').textContent=new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const t=td();
+  const [pa,pt,ra,bt]=await Promise.all([
+    getDocs(collection(db,'patients')),
+    getDocs(query(collection(db,'patients'),where('date','==',t))),
+    getDocs(collection(db,'prescriptions')),
+    getDocs(query(collection(db,'bills'),where('date','==',t)))
+  ]);
+  const rev=bt.docs.reduce((s,d)=>s+(d.data().total||0),0);
+  const waiting=pt.docs.filter(d=>d.data().status==='waiting').length;
+  document.getElementById('s1').textContent=pa.size;
+  document.getElementById('s2').textContent=pt.size;
+  document.getElementById('s2s').textContent=waiting?waiting+' waiting':'';
+  document.getElementById('s3').textContent=ra.size;
+  document.getElementById('s4').textContent='₹'+rev.toLocaleString();
+
+  const recent=[];
+  pa.docs.slice(-4).forEach(d=>{const p=d.data();recent.push({icon:'👤',text:p.name+' registered',sub:p.token,date:p.date||''});});
+  ra.docs.slice(-3).forEach(d=>{const r=d.data();recent.push({icon:'📋',text:'Rx: '+r.diagnosis,sub:r.patientName,date:r.date||''});});
+  bt.docs.forEach(d=>{const b=d.data();recent.push({icon:'💰',text:'Bill: ₹'+b.total,sub:b.patientName,date:b.date||''});});
+  recent.sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('dash-recent').innerHTML=recent.length?recent.slice(0,8).map(r=>`
+    <div style="display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--border);">
+      <div style="width:32px;height:32px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">${r.icon}</div>
+      <div style="flex:1;min-width:0;"><div style="font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.text}</div><div style="font-size:11px;color:var(--muted);">${r.sub}</div></div>
+      <div style="font-size:10.5px;color:var(--muted2);flex-shrink:0;">${r.date}</div>
+    </div>`).join(''):`<div class="empty" style="padding:18px;"><p>No recent activity</p></div>`;
+
+  const sc={};
+  pt.docs.forEach(d=>{const s=d.data().status||'waiting';sc[s]=(sc[s]||0)+1;});
+  document.getElementById('dash-status').innerHTML=['waiting','in-progress','prescribed','under-treatment','completed','cancelled'].map(s=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:12.5px;">${se(s)} ${s}</span>
+      <span class="badge ${sb(s)}">${sc[s]||0}</span>
+    </div>`).join('');
+  log('Dashboard loaded');
+};
+
+// ==============================
+// HISTORY SEARCH
+// ==============================
+window.searchHistory=async()=>{
+  const q=document.getElementById('h-search').value.toLowerCase().trim();
+  const c=document.getElementById('h-results');
+  if(q.length<1){c.innerHTML='';return;}
+  c.innerHTML=`<div class="loader"><span class="spin"></span>Searching...</div>`;
+  try {
+    // Fetch all patients (no composite index needed) and filter in JS
+    const s=await getDocs(collection(db,'patients'));
+    const pts=s.docs.map(d=>({id:d.id,...d.data()})).filter(p=>
+      p.name.toLowerCase().includes(q)||(p.token||'').toLowerCase().includes(q)||(p.phone||'').includes(q)
+    );
+    log('History "'+q+'": '+pts.length);
+    if(!pts.length){c.innerHTML=`<div class="empty"><div class="ei">🔍</div><p>No patients found for "${q}"</p></div>`;return;}
+
+    // Fetch prescriptions and bills with simple where() — no orderBy = no index needed
+    const [rs,bs]=await Promise.all([
+      getDocs(collection(db,'prescriptions')),
+      getDocs(collection(db,'bills'))
+    ]);
+    const rm={},bm={};
+    rs.docs.forEach(d=>{const r=d.data();(rm[r.patientId]=rm[r.patientId]||[]).push({id:d.id,...r});});
+    bs.docs.forEach(d=>{const b=d.data();(bm[b.patientId]=bm[b.patientId]||[]).push({id:d.id,...b});});
+    // Sort by date descending in JS
+    Object.values(rm).forEach(arr=>arr.sort((a,b)=>(b.createdAt?.seconds??0)-(a.createdAt?.seconds??0)));
+    Object.values(bm).forEach(arr=>arr.sort((a,b)=>(b.createdAt?.seconds??0)-(a.createdAt?.seconds??0)));
+
+    c.innerHTML=pts.map(p=>{
+      const rxs=rm[p.id]||[], bills=bm[p.id]||[];
+      const spent=bills.reduce((s,b)=>s+b.total,0);
+      return `<div class="card">
+        <div style="display:flex;align-items:center;gap:13px;margin-bottom:12px;">
+          <div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:#060d1a;flex-shrink:0;">${p.name[0]}</div>
+          <div style="flex:1"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;">${p.name}</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">${p.token} · ${p.age}y · ${p.gender}${p.blood?' · '+p.blood:''} · ${p.phone||'—'}</div></div>
+          <span class="badge ${sb(p.status)}">${se(p.status)} ${p.status}</span>
+        </div>
+        <div style="font-size:11.5px;color:var(--muted);margin-bottom:10px;">📋 ${rxs.length} prescription${rxs.length!==1?'s':''} · 💰 ${bills.length} bill${bills.length!==1?'s':''} · <span style="color:var(--accent3);">₹${spent.toLocaleString()} spent</span></div>
+        <div style="font-size:13px;margin-bottom:10px;"><strong>Complaint:</strong> ${p.complaint}</div>
+        ${rxs.length?`<div class="slbl">Latest Prescriptions</div>${rxs.slice(0,2).map(r=>`<div class="rx-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="font-weight:600;font-size:13px;">${r.diagnosis}</span><span style="font-size:11px;color:var(--accent);">${r.date}</span></div><div style="font-size:12px;white-space:pre-line;">${r.medications}</div></div>`).join('')}`:''}
+        <div style="display:flex;gap:7px;margin-top:11px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="viewRecord('${p.id}')">👁 Full Record</button>
+          ${role==='doctor'?`<button class="btn btn-purple btn-sm" onclick="openRxModal('${p.id}')">📋 New Rx</button>`:''}
+          <button class="btn btn-success btn-sm" onclick="openBillModal('${p.id}')">💰 Bill</button>
+          <button class="btn btn-warn btn-sm" onclick="openStModal('${p.id}')">🔄 Status</button>
+          <button class="btn btn-ghost btn-sm" onclick="openEditPt('${p.id}')">✏️ Edit</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(err) {
+    log('History error: '+err.message,'error');
+    c.innerHTML=`<div class="empty"><div class="ei">⚠️</div><p>Error loading history.<br><small style="opacity:0.5">${err.message}</small></p></div>`;
+  }
+};
+
+log('MediFlow loaded');
+</script>
+</body>
+</html>
